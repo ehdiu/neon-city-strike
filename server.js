@@ -19,16 +19,13 @@ PeerServer({
 });
 
 // Proxy /peerjs/* (HTTP + websocket upgrade) to the internal signalling server.
-// Mounted at root with pathFilter so request paths pass through UNCHANGED —
-// PeerJS expects its own '/peerjs/...' prefix intact. v4 of http-proxy-middleware
-// uses 'pathFilter' and requires manual forwarding of websocket upgrades.
+// Mounted AT /peerjs so only signalling traffic is proxied and static files still work.
 const peerProxy = createProxyMiddleware({
-  pathFilter: '/peerjs',
   target: `http://127.0.0.1:${PEER_PORT}`,
   ws: true,
-  changeOrigin: true,
+  changeOrigin: false, // path prefix must pass through unchanged for PeerJS
 });
-app.use(peerProxy);
+app.use('/peerjs', peerProxy);
 
 // serve the game (after proxy so /peerjs always wins)
 app.use(express.static(path.join(__dirname, 'public')));
